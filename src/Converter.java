@@ -1,15 +1,15 @@
 public class Converter {
 
     int oneStep = 75;
-    int oneStepCalory = 50;
+    int oneStepPerCalory = 50;
 
     public Double convertDistance(double step) {
-        step = step * oneStep;
+        step = (step * oneStep)/100000;
         return step;
     }
 
-    public int convertKcal(int stepKl) {
-        stepKl = (oneStepCalory * stepKl) / 1000;
-        return stepKl;
+    public Double convertKcal(double step) {
+        step = (oneStepPerCalory * step) / 1000;
+        return step;
     }
 }
