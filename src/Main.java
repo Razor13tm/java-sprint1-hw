@@ -7,7 +7,7 @@ public class Main {
         StepTracker stepTracker = new StepTracker();
 
         while (true) {
-            StepTracker.printMenu();
+            stepTracker.printMenu();
             String userInput = scanner.next();
 
             if (userInput.equals("1")) {

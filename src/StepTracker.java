@@ -1,16 +1,27 @@
 import java.util.*;
 
 public class StepTracker {
-    Scanner scanner = new Scanner(System.in);
     int goal = 10000;
-    HashMap<String, HashMap<Integer, Integer>> monthToData = new HashMap<>();
-    List<String> monthList = new ArrayList<>(Arrays.asList("январь", "февраль", "март", "апрель", "май", "июнь",
-            "июль", "август", "сентябрь", "октябрь", "ноябрь", "декабрь"));
+    Scanner scanner = new Scanner(System.in);
     Converter converter = new Converter();
+    Map<String, TreeMap<Integer, Integer>> monthToData = new HashMap<>();
+    List<String> monthList = new ArrayList<>(Arrays.asList(
+            "январь",
+            "февраль",
+            "март",
+            "апрель",
+            "май",
+            "июнь",
+            "июль",
+            "август",
+            "сентябрь",
+            "октябрь",
+            "ноябрь",
+            "декабрь"));
 
     public StepTracker() {
         for (String s : monthList) {
-            monthToData.put(s, new HashMap<>());
+            monthToData.put(s, new TreeMap<>());
         }
     }
 
@@ -25,7 +36,7 @@ public class StepTracker {
             } else {
                 System.out.println("Введите корректное значение");
             }
-        }catch (InputMismatchException e){
+        } catch (InputMismatchException e) {
             System.out.println("Введите корректное значение");
         }
     }
@@ -38,14 +49,20 @@ public class StepTracker {
         if (monthList.contains(monthName.toLowerCase())) {
             System.out.println("Введите номер дня");
             dayNumber = scanner.nextInt();
-            System.out.println("Введите количество шагов");
-            step = scanner.nextInt();
-            if (dayNumber <= 30 && step >= 0) {
-                HashMap<Integer, Integer> daysSteps = monthToData.get(monthName);
-                daysSteps.put(dayNumber, step);
-                monthToData.put(monthName, daysSteps);
+            if(dayNumber <=30) {
+                System.out.println("Введите количество шагов");
+                step = scanner.nextInt();
+                if (step >= 0) {
+                    TreeMap<Integer, Integer> daysSteps = monthToData.get(monthName);
+                    daysSteps.put(dayNumber, step);
+                    monthToData.put(monthName, daysSteps);
+                } else {
+                    System.out.println("Введите верные данные");
+                    return;
+                }
             } else {
                 System.out.println("Введите верные данные");
+                return;
             }
             System.out.println("Данные сохранены!");
         } else {
@@ -57,62 +74,90 @@ public class StepTracker {
         System.out.println("Введите месяц");
         String month = scanner.next();
         if (monthList.contains(month.toLowerCase())) {
-            double sum = 0;
-            int maxValue = 0;
-            double medSum = 0;
-            double distanceKm = 0;
-            int currentSeries = 0;
-            int maxSeries = 0;
-
-            HashMap<Integer, Integer> data = monthToData.get(month);
+            TreeMap<Integer, Integer> data = monthToData.get(month);
             for (Integer element : data.keySet()) {
                 System.out.print(element + " день: " + data.get(element) + ", ");
             }
             System.out.println(" ");
-            for (Integer element : data.values()) {
-                sum = sum + element;
-            }
-            System.out.println("Общее количество шагов за месяц: " + sum);
-            for (Integer numOfSteps : data.values()) {
-                if (numOfSteps > maxValue) {
-                    maxValue = numOfSteps;
-                }
-            }
-            System.out.println("Максимальное пройденное количество шагов в месяце: " + maxValue);
-            for (Integer numOfSteps : data.values()) {
-                medSum = medSum + numOfSteps;
-            }
-            if (data.size() != 0) {
-                medSum = medSum / data.size();
-                System.out.println("Среднее количество шагов: " + medSum);
-            } else {
-                System.out.println("Среднее количество шагов: 0");
-            }
-
-            for (Integer element : data.values()) {
-                distanceKm = element + distanceKm;
-            }
-            System.out.println("Пройденная дистанция: " + converter.convertDistance(distanceKm) + " км.");
-
-            System.out.println("Количество сожжённых килокалорий: " + converter.convertKcal(sum));
-
-            for (Integer element : data.values()) {
-                if (element > goal) {
-                    currentSeries ++;
-                }else {
-                    if(currentSeries > maxSeries) {
-                        maxSeries = currentSeries;
-                    }
-                    currentSeries = 0;
-                }
-            }
-            System.out.println("Максимальное количество подряд идущих дней, " +
-                    "в течение которых количество шагов за день было выше целевого: " + maxSeries);
+            printAllStepsByMonth(data);
+            printMaxStepsByMonth(data);
+            printAverageStepsByMonth(data);
+            printDistance(data);
+            printBurnedCalories(data);
+            printBestSeries(data);
         } else {
             System.out.println("Такого месяца не существует");
         }
     }
-    public static void printMenu() {
+
+    private void printBestSeries(TreeMap<Integer, Integer> data) {
+        int currentSeries = 0;
+        int maxSeries = 0;
+        for (Integer element : data.values()) {
+            if (element > goal) {
+                currentSeries++;
+            } else {
+                if (currentSeries > maxSeries) {
+                    maxSeries = currentSeries;
+                }
+                currentSeries = 0;
+            }
+        }
+        if (currentSeries > maxSeries) {
+            maxSeries = currentSeries;
+        }
+        System.out.println("Максимальное количество подряд идущих дней, " +
+                "в течение которых количество шагов за день было выше целевого: " + maxSeries);
+    }
+
+    private void printBurnedCalories(TreeMap<Integer, Integer> data) {
+        double sum = 0;
+        for (Integer element : data.values()) {
+            sum = sum + element;
+        }
+        System.out.println("Количество сожжённых килокалорий: " + converter.convertKcal(sum));
+    }
+
+    private void printDistance(TreeMap<Integer, Integer> data) {
+        double distanceKm = 0;
+        for (Integer element : data.values()) {
+            distanceKm = element + distanceKm;
+        }
+        System.out.println("Пройденная дистанция: " + converter.convertDistance(distanceKm) + " км.");
+    }
+
+    private void printAverageStepsByMonth(TreeMap<Integer, Integer> data) {
+        double sum = 0;
+        for (Integer element : data.values()) {
+            sum = sum + element;
+        }
+        if (data.size() != 0) {
+            sum = sum / data.size();
+            System.out.println("Среднее количество шагов: " + sum);
+        } else {
+            System.out.println("Среднее количество шагов: 0");
+        }
+    }
+
+    private void printMaxStepsByMonth(TreeMap<Integer, Integer> data) {
+        int maxValue = 0;
+        for (Integer numOfSteps : data.values()) {
+            if (numOfSteps > maxValue) {
+                maxValue = numOfSteps;
+            }
+        }
+        System.out.println("Максимальное пройденное количество шагов в месяце: " + maxValue);
+    }
+
+    private void printAllStepsByMonth(TreeMap<Integer, Integer> data) {
+        double sum = 0;
+        for (Integer element : data.values()) {
+            sum = sum + element;
+        }
+        System.out.println("Общее количество шагов за месяц: " + sum);
+    }
+
+    public void printMenu() {
         System.out.println("Что вы хотите сделать? ");
         System.out.println("1 - Ввести количество шагов за определённый день.");
         System.out.println("2 - Напечатать статистику за определённый месяц.");
